@@ -1,4 +1,4 @@
-from models import Base
+from database import Base
 
 from logging.config import fileConfig
 

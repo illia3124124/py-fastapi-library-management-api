@@ -5,10 +5,15 @@ from typing import Annotated
 from fastapi import FastAPI, Depends, Query
 from sqlalchemy.orm import Session
 
-from database import get_db
+from database import get_db, engine, Base
 
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/authors/", response_model=list[schemas.AuthorDto])

@@ -1,31 +1,27 @@
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from database import get_db
 from models import Author, Book
 from schemas import (
-    AuthorDto,
-    AuthorDetailDto,
-    AuthorListDto,
-    BookDto,
-    BookDetailDto
+    AuthorCreateUpdateDto,
+    BookCreateUpdateDto,
 )
 
 
 def get_authors(
-    db: Session = Depends(get_db),
+    db: Session,
     skip: int = 0,
     limit: int = 10
-) -> list[AuthorListDto]:
+) -> list[Author]:
     return db.execute(select(Author).offset(skip).limit(limit)).scalars().all()
 
 
 def get_author_by_id(
     id: int,
-    db: Session = Depends(get_db)
-) -> AuthorDetailDto:
+    db: Session
+) -> Author:
     author = db.execute(select(Author).where(Author.id == id)).scalar_one_or_none()
 
     if author is None:
@@ -37,9 +33,9 @@ def get_author_by_id(
 
 
 def create_author(
-    author: AuthorDto,
-    db: Session = Depends(get_db)
-) -> AuthorDetailDto:
+    author: AuthorCreateUpdateDto,
+    db: Session
+) -> Author:
     try:
         author_model = Author(
             name=author.name,
@@ -60,9 +56,9 @@ def create_author(
 
 def update_author(
     id: int,
-    author: AuthorDto,
-    db: Session = Depends(get_db)
-) -> AuthorDetailDto:
+    author: AuthorCreateUpdateDto,
+    db: Session
+) -> Author:
     author_model = get_author_by_id(
         id=id,
         db=db
@@ -92,7 +88,7 @@ def update_author(
 
 def delete_author(
     id: int,
-    db: Session = Depends(get_db)
+    db: Session
 ) -> None:
     author = get_author_by_id(
         id=id,
@@ -104,21 +100,21 @@ def delete_author(
 
 
 def get_books(
-    db: Session = Depends(get_db),
+    db: Session,
     skip: int = 0,
     limit: int = 10,
     author_id: int | None = None
-) -> list[BookDto]:
+) -> list[Book]:
     query = select(Book).offset(skip).limit(limit)
-    if author_id:
+    if author_id is not None:
         query = query.where(Book.author_id == author_id)
     return db.execute(query).scalars().all()
 
 
 def get_book_by_id(
     id: int,
-    db: Session = Depends(get_db)
-) -> BookDetailDto:
+    db: Session
+) -> Book:
     book = db.execute(select(Book).where(Book.id == id)).scalar_one_or_none()
 
     if book is None:
@@ -130,34 +126,31 @@ def get_book_by_id(
 
 
 def create_book(
-    book: BookDto,
-    db: Session = Depends(get_db)
-) -> BookDetailDto:
-    try:
-        book_model = Book(
-            title=book.title,
-            summary=book.summary,
-            publication_date=book.publication_date,
-            author_id=book.author_id
-        )
-        db.add(book_model)
-        db.commit()
-    except AttributeError:
-        db.rollback()
-        raise HTTPException(
-            detail=f"Wrong data.",
-            status_code=400
-        )
-
+    book: BookCreateUpdateDto,
+    db: Session
+) -> Book:
+    author_model = get_author_by_id(
+        id=book.author_id,
+        db=db
+    )
+    book_model = Book(
+        title=book.title,
+        summary=book.summary,
+        publication_date=book.publication_date,
+        author=author_model
+    )
+    
+    db.add(book_model)
+    db.commit()
     db.refresh(book_model)
     return book_model
 
 
 def update_book(
     id: int,
-    book: BookDto,
-    db: Session = Depends(get_db)
-) -> BookDetailDto:
+    book: BookCreateUpdateDto,
+    db: Session
+) -> Book:
     book_model = get_book_by_id(
         id=id,
         db=db
@@ -186,7 +179,7 @@ def update_book(
 
 def delete_book(
     id: int,
-    db: Session = Depends(get_db)
+    db: Session
 ) -> None:
     book = get_book_by_id(
         id=id,

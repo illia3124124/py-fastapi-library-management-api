@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import date
 from pydantic import BaseModel, ConfigDict
 
@@ -10,16 +12,29 @@ class AuthorDto(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class AuthorListDto(AuthorDto):
-    pass
+class AuthorCreateUpdateDto(BaseModel):
+    name: str
+    bio: str
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuthorDetailDto(AuthorDto):
-    books: list["BookDto"]
+    books: list["BookDto"] | None = None
 
 
 class BookDto(BaseModel):
     id: int | None = None
+    title: str
+    summary: str
+    publication_date: date
+
+    author_id: int
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BookCreateUpdateDto(BaseModel):
     title: str
     summary: str
     publication_date: date

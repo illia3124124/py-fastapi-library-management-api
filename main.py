@@ -1,5 +1,3 @@
-import time
-
 import crud
 import schemas
 
@@ -13,7 +11,7 @@ from database import get_db
 app = FastAPI()
 
 
-@app.get("/authors/", response_model=list[schemas.AuthorListDto])
+@app.get("/authors/", response_model=list[schemas.AuthorDto])
 def get_authors(
     db: Annotated[Session, Depends(get_db)],
     skip: int = Query(0, ge=0),
@@ -24,7 +22,7 @@ def get_authors(
 
 @app.post("/authors/", response_model=schemas.AuthorDetailDto)
 def create_author(
-    author: schemas.AuthorDto,
+    author: schemas.AuthorCreateUpdateDto,
     db: Annotated[Session, Depends(get_db)]
 ):
     author_model = crud.create_author(
@@ -37,7 +35,7 @@ def create_author(
 @app.put("/authors/{id}/", response_model=schemas.AuthorDetailDto)
 def update_author(
     id: int,
-    author: schemas.AuthorDto,
+    author: schemas.AuthorCreateUpdateDto,
     db: Annotated[Session, Depends(get_db)]
 ):
     author_model = crud.update_author(
@@ -86,7 +84,7 @@ def get_books(
 
 @app.post("/books/", response_model=schemas.BookDetailDto)
 def create_book(
-    book: schemas.BookDto,
+    book: schemas.BookCreateUpdateDto,
     db: Annotated[Session, Depends(get_db)]
 ):
     book_model = crud.create_book(
@@ -99,7 +97,7 @@ def create_book(
 @app.put("/books/{id}/", response_model=schemas.BookDetailDto)
 def update_book(
     id: int,
-    book: schemas.BookDto,
+    book: schemas.BookCreateUpdateDto,
     db: Annotated[Session, Depends(get_db)]
 ):
     book_model = crud.update_book(

@@ -1,14 +1,17 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 
 engine = create_engine(
-    "sqlite:///library.db"
+    "sqlite:///library.db",
+    connect_args={
+        "check_same_thread": False
+    }
 )
 
 SessionLocal = sessionmaker(
     bind=engine,
-    expire_on_commit=True,
+    expire_on_commit=False,
     autoflush=True
 )
 
@@ -20,5 +23,6 @@ def get_db():
         db.close()
 
 
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()
+
+Base.metadata.create_all(bind=engine)

@@ -13,7 +13,10 @@ class Author(Base):
     name: Mapped[str] = mapped_column(String(100), unique=True)
     bio: Mapped[str] = mapped_column(String(255))
     
-    books: Mapped[list["Book"]] = relationship(back_populates="author")
+    books: Mapped[list["Book"]] = relationship(
+        back_populates="author",
+        cascade="all, delete-orphan"
+    )
 
 
 class Book(Base):
